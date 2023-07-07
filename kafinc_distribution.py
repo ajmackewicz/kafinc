@@ -20,16 +20,24 @@ def create_sandpiles(pile_prev):
 		sandpiles.append(create_sandpile(grain))
 	return sandpiles
 
+def is_zero_or_one(lst):
+	if len(lst) == 1:
+		return True
+	else:
+		return False
+
 def add_lists_offset(list1, list2, offset):
 	compilation = []
 	print(f"Considering {list1} and {list2} with offset = {offset}")
-	if (list1 == [1] and list2 == [1]): # or (list1 == [0] and list2 == [0]):
+	if list1 == [1] and list2 == [1]: # or (list1 == [0] and list2 == [0]):
 		compilation = list1 + list2
-	elif (list1 == [0] and list2 == [0]):
+	elif list1 == [0] and list2 == [0]:
+		compilation = list1 + list2
+	elif is_zero_or_one(list1) and is_zero_or_one(list2) == 1:
 		compilation = list1 + list2
 	elif list1 == [1] or list1 == [0]:
 		compilation = [list1[0] + list2[0]] + list2[1:]
-	elif list2 == [1]:
+	elif is_zero_or_one(list2):
 		compilation = list1[0:-1] + [list1[-1] + list2[0]]
 	else:
 		for i in range(offset):
@@ -56,13 +64,10 @@ def cascade_sandpiles(sandpiles):
 	del sandpiles[0]
 	offset = 1
 	for i in range(len(sandpiles)):
-		if compilation == [1] or compilation == [0]:
+		if is_zero_or_one(compilation):
 			print(f"Pile = {compilation}")
 			compilation = add_lists_offset(compilation, sandpiles[i], offset)
-			continue
-		elif sandpiles[i] == [1]:
-			print("Pile = [1]")
-			compilation = add_lists_offset(compilation, sandpiles[i], offset)
+			offset += 1
 			continue
 		else:
 			print("Running cascade_sandpiles else.")
