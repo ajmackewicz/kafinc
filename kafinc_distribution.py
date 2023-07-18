@@ -1,3 +1,44 @@
+class Office:
+	def __init__(self, numb_forms):
+		self.numb_forms = numb_forms
+		self.to_give = 0
+	
+	def split(self):
+		self.to_give = self.numb_forms//2
+		self.numb_forms %= 2
+
+	def add_forms(self, numb_to_add):
+		self.numb_forms += numb_to_add
+		
+class Building:
+	def __init__(self, forms_initial): # to do: make list of objects with each having their initial forms
+		self.offices = []
+		self.forms_initial = forms_initial # list(int)
+
+	def assign_paperwork(self):
+		for i in range(len(self.forms_initial)):
+			self.offices.append[Office(self.forms_initial[i])]
+
+	def add_new_office(self):
+		# add office object where needed, at beginning of list or end
+
+	def distribute(self):
+		# ! TO DO
+		if self.offices[1].to_give != 0:
+			# add forms to sides
+			self.offices[0].numb_forms.add_forms(self.offices[1].to_give)
+			# add forms to other side 
+		else:
+			# do something
+		for i in range(1, len(self.offices - 1)):
+			self.offices[i].add_forms(self.offices[i - 1].to_give)
+			self.offices[i].add_forms(self.offices[i + 1].to_give)
+		self.offices[-1].add_forms(self.offices[-2].to_give)
+		# add condition for adding another office, s.a. when the paperwork is at the edges
+
+	def return_offices(self):
+		return self.offices
+
 def is_even(numb):
 	if numb % 2 == 0:
 		return True
@@ -26,55 +67,6 @@ def is_zero_or_one(lst):
 	else:
 		return False
 
-def add_lists_offset(list1, list2, offset):
-	compilation = []
-	print(f"Considering {list1} and {list2} with offset = {offset}")
-	if list1 == [1] and list2 == [1]: # or (list1 == [0] and list2 == [0]):
-		compilation = list1 + list2
-	elif list1 == [0] and list2 == [0]:
-		compilation = list1 + list2
-	elif is_zero_or_one(list1) and is_zero_or_one(list2) == 1:
-		compilation = list1 + list2
-	elif list1 == [1] or list1 == [0]:
-		compilation = [list1[0] + list2[0]] + list2[1:]
-	elif is_zero_or_one(list2):
-		compilation = list1[0:-1] + [list1[-1] + list2[0]]
-	else:
-		for i in range(offset):
-			print(f"In list1: {i}")
-			print(f"...Appending {list1[i]}")
-			compilation.append(list1[i])
-		if offset < len(list1):
-			for j in range(offset, len(list1)):
-				print(f"In overlap: {j}")
-				print(f"...Appending {list1[j] + list2[j - offset]}")
-				compilation.append(list1[j] + list2[j - offset])
-		elif offset > len(list1):
-			print("Offset is greater than length of list1.")
-			sys.exit()
-		for k in range(len(list1) - offset, len(list2)):
-			print(f"In list2: {k}")
-			print(f"...Appending {list2[k]}")
-			compilation.append(list2[k])
-		print(f"compilation = {compilation}")
-	return compilation
-
-def cascade_sandpiles(sandpiles):
-	compilation = sandpiles[0]
-	del sandpiles[0]
-	offset = 1
-	for i in range(len(sandpiles)):
-		if is_zero_or_one(compilation):
-			print(f"Pile = {compilation}")
-			compilation = add_lists_offset(compilation, sandpiles[i], offset)
-			offset += 1
-			continue
-		else:
-			print("Running cascade_sandpiles else.")
-			compilation = add_lists_offset(compilation, sandpiles[i], offset)
-			offset += 1
-	return compilation
-
 def all_zeros_and_ones(lst):
 	for item in lst:
 		if item != 1 or item != 0:
@@ -93,14 +85,3 @@ def loop_through(pile):
 n = int(input("Enter number of elements in the initial pile: "))
 pile_init = list(map(int, input("\nEnter the values in the pile, separated by spaces: ").strip().split()))[:n]
 print(f"Pile = {pile_init}")
-
-sandpiles = create_sandpiles(pile_init)
-print(f"Sandpiles = {sandpiles}")
-
-compilation = cascade_sandpiles(sandpiles)
-print(f"Compilation of sandpiles: {compilation}")
-
-"""
-final_pile = loop_through(pile_init)
-print(f"Final pile: {final_pile}")
-"""
