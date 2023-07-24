@@ -44,18 +44,18 @@ class Supervisor:
 				print("Input the adjacency matrix: ")
 				neighbors = list(map(int, input().split()))
 				self.adj_matrix = np.array(neighbors).reshape(self.offices_count, self.offices_count)
-				# self.adj_matrix = np.matrix(self.adj_matrix)
+				self.adj_matrix = np.asmatrix(self.adj_matrix)
 				result = True
 			except ValueError:
 				print("Invalid adjacency matrix.")
 				pass
 			else:
 				print("Adjacency matrix:")
-				print(f"{self.adj_matrix}")
+				print(self.adj_matrix)
 
 		for i in range(self.offices_count):
 			for j in range(self.offices_count):
-				if self.adj_matrix[i][j] == 1:
+				if self.adj_matrix[i, j] == 1:
 					self.offices[str(i + 1)].neighbors.update(str(j + 1))
 					self.offices[str(j + 1)].neighbors.update(str(i + 1))
 
@@ -119,7 +119,7 @@ class Supervisor:
 	def stabilize(self, max_iterations=100):
 		steps_taken = 0
 		is_stable = self.distribute()
-		self.draw() # Draw!
+		self.draw()
 		while not is_stable:
 			is_stable = self.distribute()
 			steps_taken += 1
@@ -128,32 +128,29 @@ class Supervisor:
 		return steps_taken
 
 	def get_labels_dict(self):
-		print(f"{self.current_configuration = }")
 		labels_dict = {}
 		for i in range(len(self.current_configuration)):
-			labels_dict[i + 1] = str(self.current_configuration[i])
-		print(f"{labels_dict = }")
+			labels_dict[i] = str(self.current_configuration[i])
 		return labels_dict
 
 	# Assign list of edge-tuples
 	def draw(self):
+		"""
 		for i in range(self.offices_count):
 			j = 0
 			j += i
 			while j < self.offices_count:
-				if self.adj_matrix[i][j] == 1:
+				if self.adj_matrix[i, j] == 1:
 					self.edges_list.append((i + 1, j + 1))
 				j += 1
+		"""
 
-		G = nx.Graph()
-		G.add_edges_from(self.edges_list)
-		pos = nx.spring_layout(G)
-
+		G = nx.from_numpy_matrix(self.adj_matrix)
+		pos = nx.shell_layout(G)
+		
 		weights = self.get_labels_dict()
 		
-		print(f"{weights = }")
-		nx.draw_networkx(G, pos=pos, with_labels=False)
-		nx.draw(G, pos=pos, node_color="skyblue", node_size=2000, font_size=10)
+		nx.draw_networkx(G, pos=pos, with_labels=False, node_color="skyblue", node_size=2000, font_size=10)
 		nx.draw_networkx_labels(G, pos=pos, labels=weights)
 		plt.show()
 
@@ -177,9 +174,6 @@ if __name__ == "__main__":
 	supervisor.initialize_offices()
 	supervisor.assign_forms()
 	supervisor.assign_neighbors()
-
-	# Test edge-tuples creation code
-	print(f"{supervisor.edges_list = }")
 
 	reassignments = supervisor.stabilize()
 	print(f"Number of {reassignments = }")
