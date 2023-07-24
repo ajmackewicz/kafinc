@@ -10,21 +10,48 @@ class Office:
 		self.inbox_count = 0
 		self.previously_occupied = False
 
-	'''
 	def __repr__(self):
-		return f"Office Number {self.number} has {self.forms_count} forms."
-	'''
+		return f"Office Number {self.number} has {self.forms_count} forms"
 
 class Supervisor:
 	def __init__(self):
 		self.offices_count = 0
 		self.offices = {}
+		self.office_layout = ""
 		self.new_offices = {}
 		self.adj_matrix = [] 
 		self.offices_count = 0
 		self.prev_configurations = []
 		self.cycle_configurations = []
 		self.edges_list = []
+
+	def plan_layout(self):
+		self.offices_count = int(input("Input the number of offices: "))
+		self.office_layout = int(input("Input the type of layout:\n 1. loop\n 2. web\n 3. other\n\n"))
+		self.adj_matrix = np.zeros([self.offices_count, self.offices_count], dtype=int)
+
+		if self.office_layout == 1:
+			for i in range(self.offices_count):
+				self.adj_matrix[i][(i - 1)%self.offices_count] = 1
+				self.adj_matrix[i][(i)%self.offices_count] = 0
+				self.adj_matrix[i][(i + 1)%self.offices_count] = 1
+		elif self.office_layout == 2:
+			...
+		elif self.office_layout == 3:
+			result = None
+			while result is None:
+				try:
+					print("Input the adjacency matrix: ")
+					neighbors = list(map(int, input().split()))
+					self.adj_matrix = np.array(neighbors).reshape(self.offices_count, self.offices_count)
+					self.adj_matrix = np.asmatrix(self.adj_matrix)
+					result = True
+				except ValueError:
+					print("Invalid adjacency matrix.")
+					pass
+
+		print("Adjacency matrix:")
+		print(self.adj_matrix)
 
 	def initialize_offices(self):
 		for number in range(1, self.offices_count + 1):
@@ -38,21 +65,6 @@ class Supervisor:
 		self.current_configuration = self.get_current_config()
 
 	def assign_neighbors(self):
-		result = None
-		while result is None:
-			try:
-				print("Input the adjacency matrix: ")
-				neighbors = list(map(int, input().split()))
-				self.adj_matrix = np.array(neighbors).reshape(self.offices_count, self.offices_count)
-				self.adj_matrix = np.asmatrix(self.adj_matrix)
-				result = True
-			except ValueError:
-				print("Invalid adjacency matrix.")
-				pass
-			else:
-				print("Adjacency matrix:")
-				print(self.adj_matrix)
-
 		for i in range(self.offices_count):
 			for j in range(self.offices_count):
 				if self.adj_matrix[i, j] == 1:
@@ -119,8 +131,8 @@ class Supervisor:
 	def stabilize(self, max_iterations=100):
 		steps_taken = 0
 		is_stable = self.distribute()
-		self.draw()
 		while not is_stable:
+			self.draw()
 			is_stable = self.distribute()
 			steps_taken += 1
 			if steps_taken >= max_iterations:
@@ -133,18 +145,7 @@ class Supervisor:
 			labels_dict[i] = str(self.current_configuration[i])
 		return labels_dict
 
-	# Assign list of edge-tuples
 	def draw(self):
-		"""
-		for i in range(self.offices_count):
-			j = 0
-			j += i
-			while j < self.offices_count:
-				if self.adj_matrix[i, j] == 1:
-					self.edges_list.append((i + 1, j + 1))
-				j += 1
-		"""
-
 		G = nx.from_numpy_matrix(self.adj_matrix)
 		pos = nx.shell_layout(G)
 		
@@ -168,14 +169,14 @@ class Supervisor:
 
 if __name__ == "__main__":
 	supervisor = Supervisor()
-	supervisor.offices_count = int(input("Input the number of offices: "))
+	# supervisor.offices_count = int(input("Input the number of offices: "))
 
 	# Assign forms and neighbors as adjacency matrix
+	supervisor.plan_layout()
 	supervisor.initialize_offices()
+
 	supervisor.assign_forms()
 	supervisor.assign_neighbors()
 
 	reassignments = supervisor.stabilize()
 	print(f"Number of {reassignments = }")
-
-	supervisor.draw()
