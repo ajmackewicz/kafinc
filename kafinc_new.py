@@ -17,7 +17,7 @@ class Supervisor:
 	def __init__(self):
 		self.offices_count = 0
 		self.offices = {}
-		self.office_layout = ""
+		self.office_layout_id = ""
 		self.new_offices = {}
 		self.adj_matrix = [] 
 		self.offices_count = 0
@@ -26,18 +26,23 @@ class Supervisor:
 		self.edges_list = []
 
 	def plan_layout(self):
+		self.office_layout_id = int(input("""Choose the type of layout:
+1. loop
+2. web
+3. other
+4. loop w active office of one
+Number for layout: """))
 		self.offices_count = int(input("Input the number of offices: "))
-		self.office_layout = int(input("Input the type of layout:\n 1. loop\n 2. web\n 3. other\n\n"))
-		self.adj_matrix = np.zeros([self.offices_count, self.offices_count], dtype=int)
 
-		if self.office_layout == 1:
+		self.adj_matrix = np.zeros([self.offices_count, self.offices_count], dtype=int)
+		if self.office_layout_id == 1 or self.office_layout_id == 4:
 			for i in range(self.offices_count):
 				self.adj_matrix[i][(i - 1)%self.offices_count] = 1
 				self.adj_matrix[i][(i)%self.offices_count] = 0
 				self.adj_matrix[i][(i + 1)%self.offices_count] = 1
-		elif self.office_layout == 2:
+		elif self.office_layout_id == 2:
 			...
-		elif self.office_layout == 3:
+		elif self.office_layout_id == 3:
 			result = None
 			while result is None:
 				try:
@@ -54,23 +59,29 @@ class Supervisor:
 		print(self.adj_matrix)
 
 	def initialize_offices(self):
-		for number in range(1, self.offices_count + 1):
-			self.offices[str(number)] = Office(number)
+		for number in range(self.offices_count):
+			self.offices[str(number + 1)] = Office(number + 1)
 		
 	def assign_forms(self):
-		print("Input the forms per offices list: ")
-		forms_configuration_initial = tuple(map(int, input().split()))
-		for i in range(len(forms_configuration_initial)):
-			self.offices[str(i + 1)].forms_count = forms_configuration_initial[i]
-		self.current_configuration = self.get_current_config()
+		if self.office_layout_id == 4:
+			self.offices[str(1)].forms_count = int(input("Input the number of forms in the single office: "))
+		else:
+			print("Input the forms per offices list: ")
+			forms_configuration_initial = tuple(map(int, input().split()))
+			for i in range(len(forms_configuration_initial)):
+				self.offices[str(i + 1)].forms_count = forms_configuration_initial[i]
+			self.current_configuration = self.get_current_config()
 
 	def assign_neighbors(self):
 		for i in range(self.offices_count):
-			for j in range(self.offices_count):
+			j = 0
+			j += i
+			while j < self.offices_count:
 				if self.adj_matrix[i, j] == 1:
-					self.offices[str(i + 1)].neighbors.update(str(j + 1))
-					self.offices[str(j + 1)].neighbors.update(str(i + 1))
-
+					self.offices[str(i + 1)].neighbors.add(str(j + 1))
+					self.offices[str(j + 1)].neighbors.add(str(i + 1))
+				j += 1
+	
 	def is_final_config(self):
 		is_final = True
 		for _, office in self.offices.items():
@@ -87,7 +98,8 @@ class Supervisor:
 
 	def get_current_config(self):
 		forms_configuration = []
-		sorted_dict = dict(sorted(self.offices.items()))
+		offices_numbers_sorted = list(self.offices.keys())
+		sorted_dict = {number: self.offices[number] for number in offices_numbers_sorted}
 		for _, office in sorted_dict.items():
 			forms_configuration.append(office.forms_count)
 		forms_configuration = tuple(forms_configuration)
@@ -96,7 +108,6 @@ class Supervisor:
 		
 	def distribute(self):
 		self.current_configuration = self.get_current_config()
-		
 		is_stable = True
 
 		for _, office in self.offices.items():
@@ -125,23 +136,22 @@ class Supervisor:
 		self.offices.update(self.new_offices)
 		self.new_offices = {}
 
+		self.draw()
+
 		print(self.current_configuration)
 		return is_stable
 
-	def stabilize(self, max_iterations=100):
+	def stabilize(self):
 		steps_taken = 0
 		is_stable = self.distribute()
 		while not is_stable:
-			self.draw()
 			is_stable = self.distribute()
 			steps_taken += 1
-			if steps_taken >= max_iterations:
-				raise RuntimeError("Help, we're in a loop")
 		return steps_taken
 
 	def get_labels_dict(self):
 		labels_dict = {}
-		for i in range(len(self.current_configuration)):
+		for i in range(self.offices_count):
 			labels_dict[i] = str(self.current_configuration[i])
 		return labels_dict
 
@@ -151,7 +161,7 @@ class Supervisor:
 		
 		weights = self.get_labels_dict()
 		
-		nx.draw_networkx(G, pos=pos, with_labels=False, node_color="skyblue", node_size=2000, font_size=10)
+		nx.draw_networkx(G, pos=pos, with_labels=False, node_color="skyblue", node_size=200, font_size=10)
 		nx.draw_networkx_labels(G, pos=pos, labels=weights)
 		plt.show()
 
