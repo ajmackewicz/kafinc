@@ -60,6 +60,14 @@ def get_adj_mat_k_n(n):
 		adj_matrix[i][i] = 0
 	return adj_matrix
 
+def get_edge_count(n, graph_type):
+	edge_count = 0
+	if graph_type == "k_n":
+		edge_count = int(0.5 * n * (n - 1))
+	elif graph_type == "deg3loop":
+		edge_count = int(1.5 * n)
+	return edge_count
+
 class Office:
 	def __init__(self, number):
 		self.number = number
@@ -82,7 +90,8 @@ class PublicRelations:
 	2. three-regular graph, double loop
 	3. other
 	4. test three-regular graph, double loop
-	5. complete graph, K_n
+	5. complete graph, k_n
+	6. test complete graph, k_n
 Number for layout: """))
 		if purpose_id == 1:
 			self.purpose = "C_n"
@@ -93,7 +102,9 @@ Number for layout: """))
 		elif purpose_id == 4:
 			self.purpose = "testdeg3loop"
 		elif purpose_id == 5:
-			self.purpose = "K_n"
+			self.purpose = "k_n"
+		elif purpose_id == 6:
+			self.purpose = "test_k_n"
 		return self.purpose
 	
 	def get_offices_count(self):
@@ -107,14 +118,16 @@ Number for layout: """))
 		self.purpose = supervisor.office_layout_id
 
 		# print(f"{supervisor.tikz_code[0] = }")
-		if self.purpose == "C_n" or self.purpose == "deg3loop" or self.purpose == "K_n" or self.purpose == "other":
+		if self.purpose == "C_n" or self.purpose == "deg3loop" or self.purpose == "k_n" or self.purpose == "other":
 			supervisor.assign_forms()
 			supervisor.assign_neighbors()
 			reassignments = supervisor.stabilize()
 			print(f"Number of {reassignments = }")
 			print(f"Maximum number of firing nodes = {supervisor.firing_nodes_count}")
 		elif self.purpose == "testdeg3loop":
-			supervisor.test_stability_interval()
+			supervisor.test_stability_interval("deg3loop")
+		elif self.purpose == "test_k_n":
+			supervisor.test_stability_interval("k_n")
 	
 class Supervisor:
 	def __init__(self):
@@ -143,7 +156,7 @@ class Supervisor:
 			self.adj_matrix = get_adj_mat_deg3(self.offices_count)
 		elif self.office_layout_id == "other":
 			self.adj_matrix = get_adj_mat_manual(self.offices_count)
-		elif self.office_layout_id == "K_n":
+		elif self.office_layout_id == "k_n" or self.office_layout_id == "test_k_n":
 			self.adj_matrix = get_adj_mat_k_n(self.offices_count)
 		print("Adjacency matrix:")
 		print(self.adj_matrix)
@@ -275,14 +288,10 @@ class Supervisor:
 		self.tikz_code.append(latex_code)
 		"""
 
-	def test_stability_interval(self):
-		vertices_count = 0
-		edge_count = 0
-
-		if self.office_layout_id == "testdeg3loop":
-			vertices_count = self.offices_count
-			edge_count = int(1.5 * self.offices_count)
-
+	def test_stability_interval(self, graph_type):
+		vertices_count = self.offices_count
+		edge_count = get_edge_count(self.offices_count, graph_type)
+		
 		for i in range(edge_count, 2 * edge_count - vertices_count + 1):
 			self.assign_forms(manually_input=False, initial_forms=i)
 			self.assign_neighbors()
