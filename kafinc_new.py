@@ -16,6 +16,21 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 
+def get_adj_mat_manual(n):
+	adj_matrix = np.zeros([n, n], dtype=int)
+	result = None
+	while result is None:
+		try:
+			print("Input the adjacency matrix: ")
+			neighbors = list(map(int, [*input()]))
+			adj_matrix = np.array(neighbors).reshape(n, n)
+			adj_matrix = np.asmatrix(adj_matrix)
+			result = True
+		except ValueError:
+			print("Invalid adjacency matrix.")
+			pass
+	return adj_matrix
+
 def get_adj_mat_deg2(n):
 	adj_matrix = np.zeros([n, n], dtype=int)
 	for i in range(n):
@@ -39,6 +54,12 @@ def get_adj_mat_deg3(n):
 	adj_matrix = np.vstack((sub_matrix_top, sub_matrix_bottom))
 	return adj_matrix
 
+def get_adj_mat_k_n(n):
+	adj_matrix = np.ones([n, n], dtype=int)
+	for i in range(n):
+		adj_matrix[i][i] = 0
+	return adj_matrix
+
 class Office:
 	def __init__(self, number):
 		self.number = number
@@ -57,19 +78,22 @@ class PublicRelations:
 	def get_purpose_id(self):
 		self.purpose = ""
 		purpose_id = int(input("""Choose the type of layout:
-	1. second degree loop
-	2. third degree double loop
+	1. two-regular graph, C_n
+	2. three-regular graph, double loop
 	3. other
-	4. test third degree double loop
+	4. test three-regular graph, double loop
+	5. complete graph, K_n
 Number for layout: """))
 		if purpose_id == 1:
-			self.purpose = "deg2loop"
+			self.purpose = "C_n"
 		elif purpose_id == 2:
 			self.purpose = "deg3loop"
 		elif purpose_id == 3:
 			self.purpose = "other"
 		elif purpose_id == 4:
 			self.purpose = "testdeg3loop"
+		elif purpose_id == 5:
+			self.purpose = "K_n"
 		return self.purpose
 	
 	def get_offices_count(self):
@@ -83,13 +107,7 @@ Number for layout: """))
 		self.purpose = supervisor.office_layout_id
 
 		# print(f"{supervisor.tikz_code[0] = }")
-		if self.purpose == "deg2loop":
-			supervisor.assign_forms()
-			supervisor.assign_neighbors()
-			reassignments = supervisor.stabilize()
-			print(f"Number of {reassignments = }")
-			print(f"Maximum number of firing nodes = {supervisor.firing_nodes_count}")
-		elif self.purpose == "deg3loop":
+		if self.purpose == "C_n" or self.purpose == "deg3loop" or self.purpose == "K_n" or self.purpose == "other":
 			supervisor.assign_forms()
 			supervisor.assign_neighbors()
 			reassignments = supervisor.stabilize()
@@ -119,24 +137,14 @@ class Supervisor:
 		self.office_layout_id = pr.get_purpose_id()
 		self.offices_count = pr.get_offices_count()
 
-		print(f"{self.offices_count = }")
-		print(f"{self.office_layout_id = }")
-		if self.office_layout_id == "deg2loop":
+		if self.office_layout_id == "C_n":
 			self.adj_matrix = get_adj_mat_deg2(self.offices_count)
 		elif self.office_layout_id == "deg3loop" or self.office_layout_id == "testdeg3loop":
 			self.adj_matrix = get_adj_mat_deg3(self.offices_count)
 		elif self.office_layout_id == "other":
-			result = None
-			while result is None:
-				try:
-					print("Input the adjacency matrix: ")
-					neighbors = list(map(int, [*input()]))
-					self.adj_matrix = np.array(neighbors).reshape(self.offices_count, self.offices_count)
-					self.adj_matrix = np.asmatrix(self.adj_matrix)
-					result = True
-				except ValueError:
-					print("Invalid adjacency matrix.")
-					pass
+			self.adj_matrix = get_adj_mat_manual(self.offices_count)
+		elif self.office_layout_id == "K_n":
+			self.adj_matrix = get_adj_mat_k_n(self.offices_count)
 		print("Adjacency matrix:")
 		print(self.adj_matrix)
 
@@ -147,7 +155,7 @@ class Supervisor:
 	def assign_forms(self, manually_input=True, initial_forms=0):
 		forms_configuration_initial = []
 		if manually_input == True:
-			if self.office_layout_id == "deg2loop" or self.office_layout_id == "deg3loop":
+			if self.office_layout_id == "C_n" or self.office_layout_id == "deg3loop":
 				self.offices[str((self.offices_count + 1)//2)].forms_count = int(input("Input the number of forms in the single office: "))
 			else:
 				print("Input the forms per offices list: ")
