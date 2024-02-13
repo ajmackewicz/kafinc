@@ -2,7 +2,7 @@
 
 
 ## Background
-This program that I made during my REU simulates the chip-firing game. Instead of keeping track of 25 nodes and firing them, the simulation facilitated analyzing the patterns we were researching.
+This program that I made during my REU simulates the chip-firing game. Instead of keeping track of 25 nodes and firing them by hand, we decided to make a computer do it for us so that we could focus on analyzing the patterns we were researching.
 I was introduced to the Python module NetworkX which can draw graphs given an adjacency matrix.
 
 ## Code
